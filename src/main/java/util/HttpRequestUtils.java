@@ -106,4 +106,11 @@ public class HttpRequestUtils {
             return "Pair [key=" + key + ", value=" + value + "]";
         }
     }
+    
+    public static String urlSplit(String httpHeader) {
+    	
+    	String[] tokens = httpHeader.split(" ");
+    	
+    	return tokens[1];
+    }
 }

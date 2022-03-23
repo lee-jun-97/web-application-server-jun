@@ -1,7 +1,8 @@
 package util;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
 
 import java.util.Map;
 
@@ -69,5 +70,12 @@ public class HttpRequestUtilsTest {
         String header = "Content-Length: 59";
         Pair pair = HttpRequestUtils.parseHeader(header);
         assertThat(pair, is(new Pair("Content-Length", "59")));
+    }
+    
+    @Test
+    public void urlSplit() throws Exception{
+    	
+    	assertThat("index.html", is(HttpRequestUtils.urlSplit("POST /index.html asdfasfsadf")));
+    	
     }
 }
