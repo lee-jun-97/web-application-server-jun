@@ -4,10 +4,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
 
+import model.User;
 import util.HttpRequestUtils.Pair;
 
 public class HttpRequestUtilsTest {
@@ -73,9 +75,42 @@ public class HttpRequestUtilsTest {
     }
     
     @Test
-    public void urlSplit() throws Exception{
+    public void getHeaderData() throws Exception{
     	
-    	assertThat("index.html", is(HttpRequestUtils.urlSplit("POST /index.html asdfasfsadf")));
+    	assertThat("POST", is(HttpRequestUtils.getHeaderData("POST /index.html asdfasfsadf")[0]));
+    	assertThat("/index.html", is(HttpRequestUtils.getHeaderData("POST /index.html asdfasfsadf")[1]));
+    	assertThat("asdfasfsadf", is(HttpRequestUtils.getHeaderData("POST /index.html asdfasfsadf")[2]));
+    }
+    
+    @Test
+    public void parseParam() throws Exception {
+    	
+    	String header = "GET /user/create?userId=asdfasdfasdf&password=password&name=java&email=java@gmail.com";
+    	
+    	Map<String, String> param = HttpRequestUtils.parseParam(header);
+    	
+    	assertThat("asdfasdfasdf", is(param.get("userId")));
+    	assertThat("password", is(param.get("password")));
+    	assertThat("java", is(param.get("name")));
+    	assertThat("java@gmail.com", is(param.get("email")));
+    }
+    
+    @Test
+    public void saveUser() {
+    	
+    	Map<String, String> userMap = new HashMap<>();
+    	
+    	userMap.put("userId", "ID");
+    	userMap.put("password", "password");
+    	userMap.put("name", "name");
+    	userMap.put("email", "email");
+    	
+    	User user = HttpRequestUtils.saveUser(userMap);
+    	
+    	assertThat("ID", is(user.getUserId()));
+    	assertThat("password", is(user.getPassword()));
+    	assertThat("name", is(user.getName()));
+    	assertThat("email", is(user.getEmail()));
     	
     }
 }

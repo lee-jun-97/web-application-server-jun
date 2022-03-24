@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import model.User;
+
 public class HttpRequestUtils {
     /**
      * @param queryString은
@@ -107,10 +109,22 @@ public class HttpRequestUtils {
         }
     }
     
-    public static String urlSplit(String httpHeader) {
+    public static String[] getHeaderData(String httpHeader) {
     	
-    	String[] tokens = httpHeader.split(" ");
+    	return httpHeader.split(" ");
+    }
+    
+    public static Map<String, String> parseParam(String str) {
     	
-    	return tokens[1];
+    	int index = str.indexOf("?");
+    	
+    	String param = str.substring(index+1);
+    	
+    	return parseQueryString(param);
+    }
+    
+    
+    public static User saveUser(Map<String, String> param) {
+    	return new User(param.get("userId"), param.get("password"), param.get("name"), param.get("email"));
     }
 }

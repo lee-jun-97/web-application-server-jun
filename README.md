@@ -19,10 +19,10 @@
 * Application을 기동시키고 HTTP 요청이 Thread-0, Thread-1 총 2 번이 들어옴.
 
 ### 요구사항 2 - get 방식으로 회원가입
-* 
+* GET 방식은 HTTP Header에 QueryString 으로 Parameter가 주소창에 노출되어 입력된다.
 
 ### 요구사항 3 - post 방식으로 회원가입
-* 
+* POST 방식은 GET 방식과 다르게 HTTP Body 부분에 Parameter가 입력된다.
 
 ### 요구사항 4 - redirect 방식으로 이동
 * 

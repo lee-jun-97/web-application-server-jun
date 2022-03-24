@@ -9,11 +9,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import model.User;
 import util.HttpRequestUtils;
+import util.IOUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -35,19 +38,41 @@ public class RequestHandler extends Thread {
             BufferedReader bufReader = new BufferedReader(new InputStreamReader(in));
             
             String line = bufReader.readLine();
-            String fileName = HttpRequestUtils.urlSplit(line);
+            String[] param = HttpRequestUtils.getHeaderData(line);
             byte[] body = "Hello World".getBytes();
             
-            while (!"".equals(line)) { 
-            	line = bufReader.readLine();
-            	if ( line == null ) {
-            		return ;
-            	}
+            int content_length = 0;
+            
+            User user = new User("","","","");
+            
+            if ( line.contains("?") ) {
+            	Map<String, String> paramMap = HttpRequestUtils.parseParam(param[1]);
+            	user = HttpRequestUtils.saveUser(paramMap);
             }
             
-            if ( !fileName.equals("/") ) {
-            	body = Files.readAllBytes(new File("./webapp" + fileName).toPath());
+            if ( !param[1].equals("/") ) {
+            	
+            	while (!"".equals(line)) { 
+                	line = bufReader.readLine();
+                	param = HttpRequestUtils.getHeaderData(line);
+                	if ( param[0].equals("Content-Length:") ) {
+                		content_length = Integer.parseInt(param[1]);
+                	}
+                	if ( line == null ) {
+                		return ;
+                	}
+                }
+            	
+            	body = Files.readAllBytes(new File("./webapp" + param).toPath());
             }
+            
+            if ( param[0].equals("POST") ) {
+            	line = IOUtils.readData(bufReader, content_length);
+            	Map<String, String> userMap = HttpRequestUtils.parseQueryString(line);
+            	user = HttpRequestUtils.saveUser(userMap);
+            }
+            
+            System.out.println(user.toString());
             
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
             DataOutputStream dos = new DataOutputStream(out);
