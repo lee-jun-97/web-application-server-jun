@@ -23,6 +23,7 @@
 
 ### 요구사항 3 - post 방식으로 회원가입
 * POST 방식은 GET 방식과 다르게 HTTP Body 부분에 Parameter가 입력된다.
+* HTTP Body 부분을 readData Method를 활용해 읽기 위해서는 먼저 HTTP Header 부분을 while문을 통해 모두 읽은 후에 읽을 수 있다.
 
 ### 요구사항 4 - redirect 방식으로 이동
 * 

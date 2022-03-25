@@ -27,7 +27,7 @@ public class RequestHandler extends Thread {
         this.connection = connectionSocket;
     }
 
-    public void run() {
+	public void run() {
         log.debug("New Client Connect! Connected IP : {}, Port : {}", connection.getInetAddress(),
                 connection.getPort());
 
@@ -39,12 +39,16 @@ public class RequestHandler extends Thread {
             
             String line = bufReader.readLine();
             String[] param = HttpRequestUtils.getHeaderData(line);
+            
             byte[] body = "Hello World".getBytes();
+            
+            String httpBody = "";
             
             int content_length = 0;
             
             User user = new User("","","","");
             
+            // GET 방식
             if ( line.contains("?") ) {
             	Map<String, String> paramMap = HttpRequestUtils.parseParam(param[1]);
             	user = HttpRequestUtils.saveUser(paramMap);
@@ -52,27 +56,33 @@ public class RequestHandler extends Thread {
             
             if ( !param[1].equals("/") ) {
             	
-            	while (!"".equals(line)) { 
-                	line = bufReader.readLine();
-                	param = HttpRequestUtils.getHeaderData(line);
-                	if ( param[0].equals("Content-Length:") ) {
-                		content_length = Integer.parseInt(param[1]);
-                	}
-                	if ( line == null ) {
-                		return ;
-                	}
-                }
+            	if ( param[1].contains(".html") ) {
+            		body = Files.readAllBytes(new File("./webapp" + param[1]).toPath());
+            	} else {
+	            	while (!"".equals(line)) { 
+	                	line = bufReader.readLine();
+	                	param = HttpRequestUtils.getHeaderData(line);
+	                	if ( param[0].equals("Content-Length:") ) {
+	                		content_length = Integer.parseInt(param[1]);
+	                	}
+	                	if ( line == null ) {
+	                		break ;
+	                	}
+	                }
+	            	httpBody = IOUtils.readData(bufReader, content_length);
+            	}
             	
-            	body = Files.readAllBytes(new File("./webapp" + param).toPath());
             }
             
-            if ( param[0].equals("POST") ) {
-            	line = IOUtils.readData(bufReader, content_length);
-            	Map<String, String> userMap = HttpRequestUtils.parseQueryString(line);
-            	user = HttpRequestUtils.saveUser(userMap);
-            }
+            Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
             
-            System.out.println(user.toString());
+            user = HttpRequestUtils.saveUser(bodyMap);
+            
+//            if ( param[0].equals("POST") ) {
+//            	line = IOUtils.readData(bufReader, content_length);
+//            	Map<String, String> userMap = HttpRequestUtils.parseQueryString(line);
+//            	user = HttpRequestUtils.saveUser(userMap);
+//            }
             
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
             DataOutputStream dos = new DataOutputStream(out);
