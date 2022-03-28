@@ -84,10 +84,13 @@ public class RequestHandler extends Thread {
 //            	user = HttpRequestUtils.saveUser(userMap);
 //            }
             
-            // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
             DataOutputStream dos = new DataOutputStream(out);
            
-            response200Header(dos, body.length);
+        	if ( httpBody.isEmpty() ) {
+        		response200Header(dos, body.length);
+        	} else {
+        		response302Header(dos, httpBody.length());
+        	}
             responseBody(dos, body);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -113,4 +116,17 @@ public class RequestHandler extends Thread {
             log.error(e.getMessage());
         }
     }
+    
+	private void response302Header(DataOutputStream dos, int lengthOfBodyContent) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("location: localhost:8080/index.html");
+            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+    
 }
