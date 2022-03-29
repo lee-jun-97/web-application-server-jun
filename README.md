@@ -28,7 +28,9 @@
 * HTTP Body 부분을 readData Method를 활용해 읽기 위해서는 먼저 HTTP Header 부분을 while문을 통해 모두 읽은 후에 읽을 수 있다.
 
 ### 요구사항 4 - redirect 방식으로 이동
-* 
+* HTTP Header에 Location: {URL} 작성 시 대소문자 구분함. URL 작성 유의
+* localhost:8080/index.html로 Location 작성 시 파일 찾지 못하여 ../index.html로 전달해주었음.
+
 
 ### 요구사항 5 - cookie
 * 

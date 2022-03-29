@@ -70,13 +70,12 @@ public class RequestHandler extends Thread {
 	                	}
 	                }
 	            	httpBody = IOUtils.readData(bufReader, content_length);
+	            	Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
+	            	user = HttpRequestUtils.saveUser(bodyMap);
             	}
             	
             }
             
-            Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
-            
-            user = HttpRequestUtils.saveUser(bodyMap);
             
 //            if ( param[0].equals("POST") ) {
 //            	line = IOUtils.readData(bufReader, content_length);
@@ -120,7 +119,7 @@ public class RequestHandler extends Thread {
 	private void response302Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
-            dos.writeBytes("location: localhost:8080/index.html");
+            dos.writeBytes("Location: ../index.html\r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
