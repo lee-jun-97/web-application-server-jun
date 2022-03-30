@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import db.DataBase;
 import model.User;
 
 public class HttpRequestUtils {
@@ -127,4 +128,13 @@ public class HttpRequestUtils {
     public static User saveUser(Map<String, String> param) {
     	return new User(param.get("userId"), param.get("password"), param.get("name"), param.get("email"));
     }
+    
+    public static boolean loginCheck(User user) {
+    	
+    	String id = user.getUserId();
+    	String pw = user.getPassword();
+    	
+    	return pw.equals(DataBase.findUserById(id).getPassword());
+    }
+    
 }

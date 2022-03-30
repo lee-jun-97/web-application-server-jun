@@ -14,6 +14,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import db.DataBase;
 import model.User;
 import util.HttpRequestUtils;
 import util.IOUtils;
@@ -36,28 +37,56 @@ public class RequestHandler extends Thread {
             OutputStream out = connection.getOutputStream() ) {
 
             BufferedReader bufReader = new BufferedReader(new InputStreamReader(in));
+            DataOutputStream dos = new DataOutputStream(out);
             
             String line = bufReader.readLine();
             String[] param = HttpRequestUtils.getHeaderData(line);
             
-            byte[] body = "Hello World".getBytes();
+            byte[] body = {};
             
             String httpBody = "";
             
             int content_length = 0;
             
-            User user = new User("","","","");
-            
             // GET 방식
             if ( line.contains("?") ) {
             	Map<String, String> paramMap = HttpRequestUtils.parseParam(param[1]);
-            	user = HttpRequestUtils.saveUser(paramMap);
+            	User user = HttpRequestUtils.saveUser(paramMap);
+            	DataBase.addUser(user);
+            	response200Header(dos, body.length);
             }
             
+            // POST 방식
             if ( !param[1].equals("/") ) {
-            	
             	if ( param[1].contains(".html") ) {
             		body = Files.readAllBytes(new File("./webapp" + param[1]).toPath());
+            		response200Header(dos, body.length);
+            	}
+        		if ( param[1].equals("/user/login") ) {
+            		while (!"".equals(line)) { 
+	                	line = bufReader.readLine();
+	                	param = HttpRequestUtils.getHeaderData(line);
+	                	if ( param[0].equals("Content-Length:") ) {
+	                		content_length = Integer.parseInt(param[1]);
+	                	}
+	                	if ( line == null ) {
+	                		break ;
+	                	}
+	                }
+	        		httpBody = IOUtils.readData(bufReader, content_length);
+	        		Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
+	            	User user = HttpRequestUtils.saveUser(bodyMap);
+	            	
+	            	boolean login = HttpRequestUtils.loginCheck(user);
+	            	
+	            	if ( login == true ) {
+	            		responseTrueHeader(dos, content_length);
+	            	}
+	            	
+	            	if ( login == false ) {
+	            		responseFalseHeader(dos, content_length);
+	            	}
+        		
             	} else {
 	            	while (!"".equals(line)) { 
 	                	line = bufReader.readLine();
@@ -71,25 +100,13 @@ public class RequestHandler extends Thread {
 	                }
 	            	httpBody = IOUtils.readData(bufReader, content_length);
 	            	Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
-	            	user = HttpRequestUtils.saveUser(bodyMap);
+	            	User user = HttpRequestUtils.saveUser(bodyMap);
+	            	DataBase.addUser(user);
+	            	response302Header(dos, httpBody.length());
             	}
             	
             }
             
-            
-//            if ( param[0].equals("POST") ) {
-//            	line = IOUtils.readData(bufReader, content_length);
-//            	Map<String, String> userMap = HttpRequestUtils.parseQueryString(line);
-//            	user = HttpRequestUtils.saveUser(userMap);
-//            }
-            
-            DataOutputStream dos = new DataOutputStream(out);
-           
-        	if ( httpBody.isEmpty() ) {
-        		response200Header(dos, body.length);
-        	} else {
-        		response302Header(dos, httpBody.length());
-        	}
             responseBody(dos, body);
         } catch (IOException e) {
             log.error(e.getMessage());
@@ -127,5 +144,29 @@ public class RequestHandler extends Thread {
             log.error(e.getMessage());
         }
     }
+	
+	private void responseTrueHeader(DataOutputStream dos, int lengthOfBodyContent) {
+		try {
+			dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: ../index.html\r\n");
+            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Set-Cookie: logined=true\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+	}
+	
+	private void responseFalseHeader(DataOutputStream dos, int lengthOfBodyContent) {
+		try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: ../user/login_failed.html\r\n");
+            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Set-Cookie: logined=false\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+	}
     
 }

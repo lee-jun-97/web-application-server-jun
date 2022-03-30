@@ -33,7 +33,7 @@
 
 
 ### 요구사항 5 - cookie
-* 
+* ID, PW 비교하여 cookie를 HTTP Header 부분에 Set-Cookie: 를 추가하여 cookie 정보 전달함.
 
 ### 요구사항 6 - stylesheet 적용
 * 
