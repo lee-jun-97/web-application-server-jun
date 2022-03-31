@@ -34,6 +34,9 @@
 
 ### 요구사항 5 - cookie
 * ID, PW 비교하여 cookie를 HTTP Header 부분에 Set-Cookie: 를 추가하여 cookie 정보 전달함.
+* Set-Cookie Header 추가하여 응답 주니 Cookie: logined=~~~; logined=~~~~; 총 2개가 나옴
+* Cookie 값에 따라 list.html/login.html로 이동하는 것은 성공하였음
+* StringBuilder 이용하여 Body 부에 내용 전달해 주었는데 웹 페이지에서 보이지 않음.
 
 ### 요구사항 6 - stylesheet 적용
 * 

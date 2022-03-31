@@ -42,7 +42,7 @@ public class RequestHandler extends Thread {
             String line = bufReader.readLine();
             String[] param = HttpRequestUtils.getHeaderData(line);
             
-            byte[] body = {};
+            byte[] body = "Hello World".getBytes();
             
             String httpBody = "";
             
@@ -61,9 +61,13 @@ public class RequestHandler extends Thread {
             	if ( param[1].contains(".html") ) {
             		body = Files.readAllBytes(new File("./webapp" + param[1]).toPath());
             		response200Header(dos, body.length);
+            		responseBody(dos, body);
             	}
-        		if ( param[1].equals("/user/login") ) {
+            	
+            	// 로그인 요청 시
+            	if ( param[1].equals("/user/login") ) {
             		while (!"".equals(line)) { 
+            			System.out.println(line);
 	                	line = bufReader.readLine();
 	                	param = HttpRequestUtils.getHeaderData(line);
 	                	if ( param[0].equals("Content-Length:") ) {
@@ -80,15 +84,20 @@ public class RequestHandler extends Thread {
 	            	boolean login = HttpRequestUtils.loginCheck(user);
 	            	
 	            	if ( login == true ) {
-	            		responseTrueHeader(dos, content_length);
+	            		responseLoginTrueHeader(dos, content_length);
 	            	}
 	            	
 	            	if ( login == false ) {
-	            		responseFalseHeader(dos, content_length);
+	            		responseLoginFalseHeader(dos, content_length);
 	            	}
+	            	responseBody(dos, body);
         		
-            	} else {
+            	}
+            	
+            	// 회원가입 요청 시
+            	if ( param[1].equals("/user/create")) {
 	            	while (!"".equals(line)) { 
+	            		System.out.println(line);
 	                	line = bufReader.readLine();
 	                	param = HttpRequestUtils.getHeaderData(line);
 	                	if ( param[0].equals("Content-Length:") ) {
@@ -103,11 +112,47 @@ public class RequestHandler extends Thread {
 	            	User user = HttpRequestUtils.saveUser(bodyMap);
 	            	DataBase.addUser(user);
 	            	response302Header(dos, httpBody.length());
+	            	responseBody(dos, body);
             	}
             	
+            	// List 조회 시 
+            	if ( param[1].equals("/user/list") ) {
+            		
+            		while (!"".equals(line)) { 
+            			System.out.println(line);
+	                	line = bufReader.readLine();
+	                	param = HttpRequestUtils.getHeaderData(line);
+	                	if ( param[0].equals("Content-Length:") ) {
+	                		content_length = Integer.parseInt(param[1]);
+	                	}
+	                	
+	                	if ( param[0].equals("Cookie:") ) {
+	                		Map<String, String> cookie = HttpRequestUtils.parseCookies(param[1]);
+	                		
+	                		if ( Boolean.parseBoolean(cookie.get("logined")) ) {
+	                			responseListTrueHeader(dos, content_length);
+	                			
+	                			StringBuilder strbuilder = new StringBuilder();
+	                			
+	                			for ( User i : DataBase.findAll() ) {
+	                				strbuilder.append(i);
+	                			}
+	                			
+	                			responseListBody(dos, strbuilder);
+	                		} else if ( !Boolean.parseBoolean(cookie.get("logined"))) {
+	                			responseListFalseHeader(dos, content_length);
+	                			responseBody(dos, body);
+	                		}
+	                	}
+	                	if ( line == null ) {
+	                		break ;
+	                	}
+	                }
+            		
+            	}
             }
             
-            responseBody(dos, body);
+            
         } catch (IOException e) {
             log.error(e.getMessage());
         }
@@ -137,19 +182,20 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: ../index.html\r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=false\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
 	
-	private void responseTrueHeader(DataOutputStream dos, int lengthOfBodyContent) {
+	private void responseLoginTrueHeader(DataOutputStream dos, int lengthOfBodyContent) {
 		try {
 			dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: ../index.html\r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("Set-Cookie: logined=true\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
@@ -157,16 +203,45 @@ public class RequestHandler extends Thread {
         }
 	}
 	
-	private void responseFalseHeader(DataOutputStream dos, int lengthOfBodyContent) {
+	private void responseLoginFalseHeader(DataOutputStream dos, int lengthOfBodyContent) {
 		try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: ../user/login_failed.html\r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("Set-Cookie: logined=false\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
         }
+	}
+	
+	
+	private void responseListTrueHeader(DataOutputStream dos, int lengthOfBodyContent) {
+		try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: ../user/list.html\r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+	}
+	
+	private void responseListFalseHeader(DataOutputStream dos, int lengthOfBodyContent) {
+		try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: ../user/login.html\r\n");
+            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+	}
+	
+	private void responseListBody(DataOutputStream dos, StringBuilder strbuilder) {
+		
 	}
     
 }
