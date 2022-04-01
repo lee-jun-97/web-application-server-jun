@@ -66,17 +66,10 @@ public class RequestHandler extends Thread {
             	
             	// 로그인 요청 시
             	if ( param[1].equals("/user/login") ) {
+            		
             		while (!"".equals(line)) { 
-            			System.out.println(line);
-	                	line = bufReader.readLine();
-	                	param = HttpRequestUtils.getHeaderData(line);
-	                	if ( param[0].equals("Content-Length:") ) {
-	                		content_length = Integer.parseInt(param[1]);
-	                	}
-	                	if ( line == null ) {
-	                		break ;
-	                	}
-	                }
+        				content_length = HttpRequestUtils.getContentLength(line, bufReader);
+            		}
 	        		httpBody = IOUtils.readData(bufReader, content_length);
 	        		Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
 	            	User user = HttpRequestUtils.saveUser(bodyMap);
@@ -96,21 +89,16 @@ public class RequestHandler extends Thread {
             	
             	// 회원가입 요청 시
             	if ( param[1].equals("/user/create")) {
-	            	while (!"".equals(line)) { 
-	            		System.out.println(line);
-	                	line = bufReader.readLine();
-	                	param = HttpRequestUtils.getHeaderData(line);
-	                	if ( param[0].equals("Content-Length:") ) {
-	                		content_length = Integer.parseInt(param[1]);
-	                	}
-	                	if ( line == null ) {
-	                		break ;
-	                	}
-	                }
+            		
+            		while (!"".equals(line)) { 
+        				content_length = HttpRequestUtils.getContentLength(line, bufReader);
+            		}
+            		
 	            	httpBody = IOUtils.readData(bufReader, content_length);
 	            	Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
-	            	User user = HttpRequestUtils.saveUser(bodyMap);
-	            	DataBase.addUser(user);
+	            	
+	            	DataBase.addUser(HttpRequestUtils.saveUser(bodyMap));
+	            	
 	            	response302Header(dos, httpBody.length());
 	            	responseBody(dos, body);
             	}
@@ -119,12 +107,8 @@ public class RequestHandler extends Thread {
             	if ( param[1].equals("/user/list") ) {
             		
             		while (!"".equals(line)) { 
-            			System.out.println(line);
-	                	line = bufReader.readLine();
-	                	param = HttpRequestUtils.getHeaderData(line);
-	                	if ( param[0].equals("Content-Length:") ) {
-	                		content_length = Integer.parseInt(param[1]);
-	                	}
+            			
+        				content_length = HttpRequestUtils.getContentLength(line, bufReader);
 	                	
 	                	if ( param[0].equals("Cookie:") ) {
 	                		Map<String, String> cookie = HttpRequestUtils.parseCookies(param[1]);
@@ -132,14 +116,11 @@ public class RequestHandler extends Thread {
 	                		if ( Boolean.parseBoolean(cookie.get("logined")) ) {
 	                			responseListTrueHeader(dos, content_length);
 	                			
-	                			StringBuilder strbuilder = new StringBuilder();
+	                			StringBuilder strbuilder = HttpRequestUtils.makeTable();
 	                			
-	                			for ( User i : DataBase.findAll() ) {
-	                				strbuilder.append(i);
-	                			}
+	                			responseListBody(dos, strbuilder.toString().getBytes());
 	                			
-	                			responseListBody(dos, strbuilder);
-	                		} else if ( !Boolean.parseBoolean(cookie.get("logined"))) {
+	                		} else {
 	                			responseListFalseHeader(dos, content_length);
 	                			responseBody(dos, body);
 	                		}
@@ -151,6 +132,8 @@ public class RequestHandler extends Thread {
             		
             	}
             }
+            response200Header(dos, body.length);
+            responseBody(dos, body);
             
             
         } catch (IOException e) {
@@ -218,8 +201,7 @@ public class RequestHandler extends Thread {
 	
 	private void responseListTrueHeader(DataOutputStream dos, int lengthOfBodyContent) {
 		try {
-            dos.writeBytes("HTTP/1.1 302 Found \r\n");
-            dos.writeBytes("Location: ../user/list.html\r\n");
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
@@ -240,8 +222,25 @@ public class RequestHandler extends Thread {
         }
 	}
 	
-	private void responseListBody(DataOutputStream dos, StringBuilder strbuilder) {
-		
+	private void responseListBody(DataOutputStream dos, byte[] body) {
+        try {
+            dos.write(body, 0 ,body.length);
+            dos.flush();
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
 	}
+	
+//	private void responseCssHeader(DataOutputStream dos, int lengthOfBodyContent) {
+//		try {
+//			dos.writeBytes("HTTP/1.1 200 OK \r\n");
+//            dos.writeBytes("Content-Type: text/css;charset=utf-8\r\n");
+//            dos.writeBytes("Accept: text/css, */*;q=0.1");
+//            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+//            dos.writeBytes("\r\n");
+//		} catch (IOException e) {
+//			log.error(e.getMessage());
+//		}
+//	}
     
 }

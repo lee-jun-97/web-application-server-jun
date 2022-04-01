@@ -1,8 +1,13 @@
 package util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -11,6 +16,8 @@ import db.DataBase;
 import model.User;
 
 public class HttpRequestUtils {
+	
+	private static final Logger log = LoggerFactory.getLogger(HttpRequestUtils.class);
     /**
      * @param queryString은
      *            URL에서 ? 이후에 전달되는 field1=value1&field2=value2 형식임
@@ -135,6 +142,44 @@ public class HttpRequestUtils {
     	String pw = user.getPassword();
     	
     	return pw.equals(DataBase.findUserById(id).getPassword());
+    }
+    
+    public static int getContentLength(String line, BufferedReader bufReader) {
+    	
+    	int content_length = 0;
+    	
+    	try {
+				line = bufReader.readLine();
+
+	        	String[] param = HttpRequestUtils.getHeaderData(line);
+	        	if ( param[0].equals("Content-Length:") ) {
+	        		content_length = Integer.parseInt(param[1]);
+	        	}
+	        	if ( line == null ) {
+	        		return 0;
+	        	}
+		} catch (IOException e) {
+		// TODO Auto-generated catch block
+		log.error(e.getMessage());
+		}
+    	
+    	return content_length;
+    }
+    
+    public static StringBuilder makeTable() {
+    	StringBuilder strbuilder = new StringBuilder();
+		
+		strbuilder.append("<table border='1'>");
+        for (User i : DataBase.findAll()) {
+        	strbuilder.append("<tr>");
+        	strbuilder.append("<td>" + i.getUserId() + "</td>");
+        	strbuilder.append("<td>" + i.getName() + "</td>");
+        	strbuilder.append("<td>" + i.getEmail() + "</td>");
+        	strbuilder.append("</tr>");
+        }
+        strbuilder.append("</table>");
+        
+        return strbuilder;
     }
     
 }
