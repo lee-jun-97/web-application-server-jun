@@ -3,6 +3,7 @@ package util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -144,26 +145,31 @@ public class HttpRequestUtils {
     	return pw.equals(DataBase.findUserById(id).getPassword());
     }
     
-    public static int getContentLength(String line, BufferedReader bufReader) {
+    public static Map<String, String> parseHeader(String line, BufferedReader bufReader) {
     	
-    	int content_length = 0;
+    	Map<String, String> map = new HashMap<>();
     	
     	try {
+    		
+	    	while(!" ".equals(line)) {
+	    		
 				line = bufReader.readLine();
-
-	        	String[] param = HttpRequestUtils.getHeaderData(line);
-	        	if ( param[0].equals("Content-Length:") ) {
-	        		content_length = Integer.parseInt(param[1]);
-	        	}
-	        	if ( line == null ) {
-	        		return 0;
-	        	}
-		} catch (IOException e) {
-		// TODO Auto-generated catch block
-		log.error(e.getMessage());
-		}
+	    		
+	    		String[] param = getHeaderData(line);
+	    		
+	    		if ( param[0].equals("Content-Length:") ) {
+	    			map.put("content_length", param[1]);
+	    		}
+	    		
+	    		if ( param[0].equals("Cookie:") ) {
+	    			map.put("cookie", param[1]);
+	    		}
+	    	}
+    	} catch (IOException e) {
+    		e.getMessage();
+    	}
     	
-    	return content_length;
+    	return map;
     }
     
     public static StringBuilder makeTable() {

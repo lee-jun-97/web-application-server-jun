@@ -42,11 +42,11 @@ public class RequestHandler extends Thread {
             String line = bufReader.readLine();
             String[] param = HttpRequestUtils.getHeaderData(line);
             
-            byte[] body = "Hello World".getBytes();
+            byte[] body = " ".getBytes();
             
             String httpBody = "";
             
-            int content_length = 0;
+            Map<String, String> hMap = HttpRequestUtils.parseHeader(line, bufReader);
             
             // GET 방식
             if ( line.contains("?") ) {
@@ -57,81 +57,61 @@ public class RequestHandler extends Thread {
             }
             
             // POST 방식
-            if ( !param[1].equals("/") ) {
-            	if ( param[1].contains(".html") ) {
-            		body = Files.readAllBytes(new File("./webapp" + param[1]).toPath());
-            		response200Header(dos, body.length);
-            		responseBody(dos, body);
-            	}
+        	if ( param[1].contains(".html") ) {
+        		body = Files.readAllBytes(new File("./webapp" + param[1]).toPath());
+        		response200Header(dos, body.length);
+        		responseBody(dos, body);
+        	}
             	
-            	// 로그인 요청 시
-            	if ( param[1].equals("/user/login") ) {
-            		
-            		while (!"".equals(line)) { 
-        				content_length = HttpRequestUtils.getContentLength(line, bufReader);
-            		}
-	        		httpBody = IOUtils.readData(bufReader, content_length);
-	        		Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
-	            	User user = HttpRequestUtils.saveUser(bodyMap);
-	            	
-	            	boolean login = HttpRequestUtils.loginCheck(user);
-	            	
-	            	if ( login == true ) {
-	            		responseLoginTrueHeader(dos, content_length);
-	            	}
-	            	
-	            	if ( login == false ) {
-	            		responseLoginFalseHeader(dos, content_length);
-	            	}
-	            	responseBody(dos, body);
+        	// 로그인 요청 시
+        	if ( param[1].equals("/user/login") ) {
         		
+        		httpBody = IOUtils.readData(bufReader, Integer.parseInt(hMap.get("content_length")));
+        		Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
+            	User user = HttpRequestUtils.saveUser(bodyMap);
+            	
+            	boolean login = HttpRequestUtils.loginCheck(user);
+            	
+            	if ( login == true ) {
+            		responseLoginTrueHeader(dos, Integer.parseInt(hMap.get("content_length")));
             	}
             	
-            	// 회원가입 요청 시
-            	if ( param[1].equals("/user/create")) {
-            		
-            		while (!"".equals(line)) { 
-        				content_length = HttpRequestUtils.getContentLength(line, bufReader);
-            		}
-            		
-	            	httpBody = IOUtils.readData(bufReader, content_length);
-	            	Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
-	            	
-	            	DataBase.addUser(HttpRequestUtils.saveUser(bodyMap));
-	            	
-	            	response302Header(dos, httpBody.length());
-	            	responseBody(dos, body);
+            	if ( login == false ) {
+            		responseLoginFalseHeader(dos, Integer.parseInt(hMap.get("content_length")));
             	}
+            	responseBody(dos, body);
+    		
+        	}
             	
-            	// List 조회 시 
-            	if ( param[1].equals("/user/list") ) {
-            		
-            		while (!"".equals(line)) { 
-            			
-        				content_length = HttpRequestUtils.getContentLength(line, bufReader);
-	                	
-	                	if ( param[0].equals("Cookie:") ) {
-	                		Map<String, String> cookie = HttpRequestUtils.parseCookies(param[1]);
-	                		
-	                		if ( Boolean.parseBoolean(cookie.get("logined")) ) {
-	                			responseListTrueHeader(dos, content_length);
-	                			
-	                			StringBuilder strbuilder = HttpRequestUtils.makeTable();
-	                			
-	                			responseListBody(dos, strbuilder.toString().getBytes());
-	                			
-	                		} else {
-	                			responseListFalseHeader(dos, content_length);
-	                			responseBody(dos, body);
-	                		}
-	                	}
-	                	if ( line == null ) {
-	                		break ;
-	                	}
-	                }
-            		
-            	}
+        	// 회원가입 요청 시
+        	if ( param[1].equals("/user/create")) {
+        		
+            	httpBody = IOUtils.readData(bufReader, Integer.parseInt(hMap.get("content_length")));
+            	Map<String, String> bodyMap = HttpRequestUtils.parseParam(httpBody);
+            	
+            	DataBase.addUser(HttpRequestUtils.saveUser(bodyMap));
+            	
+            	response302Header(dos, httpBody.length());
+            	responseBody(dos, body);
+        	}
+        	
+        	// List 조회 시 
+        	if ( param[1].equals("/user/list") ) {
+        		
+        		if ( Boolean.parseBoolean(hMap.get("cookie")) ) {
+        			
+        			responseListTrueHeader(dos, Integer.parseInt(hMap.get("content_length")));
+        			
+        			StringBuilder strbuilder = HttpRequestUtils.makeTable();
+        			
+        			responseListBody(dos, strbuilder.toString().getBytes());
+        			
+        		} else {
+        			responseListFalseHeader(dos, Integer.parseInt(hMap.get("content_length")));
+        			responseBody(dos, body);
+        		}
             }
+            		
             response200Header(dos, body.length);
             responseBody(dos, body);
             
