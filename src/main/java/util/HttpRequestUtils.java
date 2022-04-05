@@ -1,14 +1,8 @@
 package util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -18,7 +12,7 @@ import model.User;
 
 public class HttpRequestUtils {
 	
-	private static final Logger log = LoggerFactory.getLogger(HttpRequestUtils.class);
+//	private static final Logger log = LoggerFactory.getLogger(HttpRequestUtils.class);
     /**
      * @param queryString은
      *            URL에서 ? 이후에 전달되는 field1=value1&field2=value2 형식임
@@ -143,33 +137,6 @@ public class HttpRequestUtils {
     	String pw = user.getPassword();
     	
     	return pw.equals(DataBase.findUserById(id).getPassword());
-    }
-    
-    public static Map<String, String> parseHeader(String line, BufferedReader bufReader) {
-    	
-    	Map<String, String> map = new HashMap<>();
-    	
-    	try {
-    		
-	    	while(!" ".equals(line)) {
-	    		
-				line = bufReader.readLine();
-	    		
-	    		String[] param = getHeaderData(line);
-	    		
-	    		if ( param[0].equals("Content-Length:") ) {
-	    			map.put("content_length", param[1]);
-	    		}
-	    		
-	    		if ( param[0].equals("Cookie:") ) {
-	    			map.put("cookie", param[1]);
-	    		}
-	    	}
-    	} catch (IOException e) {
-    		e.getMessage();
-    	}
-    	
-    	return map;
     }
     
     public static StringBuilder makeTable() {
